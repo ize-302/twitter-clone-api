@@ -14,7 +14,7 @@ interface Idata {
 export const generateAccessToken = (data: Idata) => {
   delete data.password;
   const token = jwt.sign({ data: data }, privateKey, {
-    expiresIn: 300,
+    expiresIn: 30000,
   });
   return token;
 };
