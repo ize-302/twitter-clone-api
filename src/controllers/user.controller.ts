@@ -61,9 +61,10 @@ class UserController {
       const { id } = req.params;
 
       // grab user detail
-      const users = await client.query("SELECT * FROM users WHERE id = $1", [
-        id,
-      ]);
+      const users = await client.query(
+        "SELECT id, username, display_name FROM users WHERE id = $1",
+        [id]
+      );
       if (users.rows.length === 0) {
         return res.status(404).json({ error: "User does not exist" });
       }
@@ -79,7 +80,6 @@ class UserController {
         [id]
       );
 
-      delete users.rows[0].password;
       const user_data = {
         ...users.rows[0],
         followers: followers.rows.length,
@@ -87,6 +87,76 @@ class UserController {
       };
 
       return res.status(200).json(user_data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  static async followers(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      // grab user detail
+      const users = await client.query("SELECT * FROM users WHERE id = $1", [
+        id,
+      ]);
+      if (users.rows.length === 0) {
+        return res.status(404).json({ error: "User does not exist" });
+      }
+
+      // grab followers count
+      const followers = await client.query(
+        "SELECT follower_id FROM followers WHERE user_id = $1",
+        [id]
+      );
+
+      if (followers.rows.length === 0) {
+        return res.status(200).json([]);
+      }
+      const followers_id = followers.rows
+        .map((follower: { follower_id: string }) => follower.follower_id)
+        .join(",")
+        .toString();
+
+      const followers_info = await client.query(
+        "SELECT id, username, display_name FROM users WHERE id IN ($1)",
+        [followers_id]
+      );
+      return res.status(200).json(followers_info.rows);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  static async following(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      // grab user detail
+      const users = await client.query("SELECT * FROM users WHERE id = $1", [
+        id,
+      ]);
+      if (users.rows.length === 0) {
+        return res.status(404).json({ error: "User does not exist" });
+      }
+
+      const following = await client.query(
+        "SELECT user_id FROM followers WHERE follower_id = $1",
+        [id]
+      );
+
+      if (following.rows.length === 0) {
+        return res.status(200).json([]);
+      }
+
+      const followings_id = following.rows
+        .map((following: { user_id: string }) => following.user_id)
+        .join(",")
+        .toString();
+
+      const followings_info = await client.query(
+        "SELECT id, username, display_name FROM users WHERE id IN ($1)",
+        [followings_id]
+      );
+      return res.status(200).json(followings_info.rows);
     } catch (error) {
       console.error(error);
     }
