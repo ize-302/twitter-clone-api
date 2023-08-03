@@ -55,6 +55,42 @@ class UserController {
       console.error(error);
     }
   }
+
+  static async profile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      // grab user detail
+      const users = await client.query("SELECT * FROM users WHERE id = $1", [
+        id,
+      ]);
+      if (users.rows.length === 0) {
+        return res.status(404).json({ error: "User does not exist" });
+      }
+
+      // grab followers count
+      const followers = await client.query(
+        "SELECT * FROM followers WHERE user_id = $1",
+        [id]
+      );
+      // grab accounts user is following
+      const following = await client.query(
+        "SELECT * FROM followers WHERE follower_id = $1",
+        [id]
+      );
+
+      delete users.rows[0].password;
+      const user_data = {
+        ...users.rows[0],
+        followers: followers.rows.length,
+        following: following.rows.length,
+      };
+
+      return res.status(200).json(user_data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 export default UserController;
