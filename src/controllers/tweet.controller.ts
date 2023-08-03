@@ -23,6 +23,21 @@ class TweetController {
       console.error(error);
     }
   }
+
+  static async deleteTweet(req: Request, res: Response) {
+    try {
+      const { user } = req.cookies;
+      const { id } = req.params;
+
+      await client.query("DELETE FROM tweets WHERE id = $1 AND user_id = $2", [
+        id,
+        user.id,
+      ]);
+      return res.status(200).json({ success: "Tweet has been deleted!" });
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 export default TweetController;
