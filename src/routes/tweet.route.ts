@@ -6,5 +6,10 @@ const tweetRoute = Router();
 
 tweetRoute.post("/", Auth.authenticate, TweetController.newTweet);
 tweetRoute.delete("/:id", Auth.authenticate, TweetController.deleteTweet);
+tweetRoute.post(
+  "/:id/like",
+  Auth.authenticate,
+  TweetController.toggleLikeTweet
+);
 
 export default tweetRoute;
