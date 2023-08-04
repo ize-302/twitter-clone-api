@@ -7,6 +7,14 @@ class UserController {
       const current_user = req.cookies.user;
       const { id } = req.params;
 
+      const users = await client.query(
+        "SELECT id, username, display_name FROM users WHERE id = $1",
+        [id]
+      );
+      if (users.rows.length === 0) {
+        return res.status(404).json({ error: "User does not exist" });
+      }
+
       // check if already following
       const result = await client.query(
         "SELECT * FROM followers WHERE user_id = $1 AND follower_id = $2",
